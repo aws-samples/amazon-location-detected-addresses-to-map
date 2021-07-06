@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: Creates a Lambda LayerVersion that contains library or runtime code needed by a Lambda Function.
+
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  PythonLibrary:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub ${AWS::StackName}
+      Description: Dependencies for the python sample functions.
+      ContentUri: ../src/layers/python/.
+      CompatibleRuntimes:
+        - python3.8
+      RetentionPolicy: Delete
+
+Outputs:
+  PythonLambdaLayer:
+    Value: !Ref PythonLibrary

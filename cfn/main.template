@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: Project description #TODO: Add description
+
+Metadata:
+  Version: 0.0.1
+
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Other configuration
+        Parameters:
+          - ResourceTags
+          - Environment
+    ParameterLabels:
+      ResourceTags:
+        default: Resource Tags
+      Environment:
+        deafult: Infrastructure Environment
+
+Parameters:
+  ResourceTags:
+    Description: Tag resources, which can help you identify and categorize them. For example project or application name e.g. MyAwesomeApp.
+    Type: String
+    Default: MyApp
+
+  Environment:
+    Description: The type of environment to tag your infrastructure with. You can specify DEV (development), TEST (test), or PROD (production).
+    Type: String
+    AllowedValues:
+      - DEV
+      - TEST
+      - PROD
+    Default: DEV
+
+Resources:
+  LayerVersionStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: layer.template
+      Tags:
+        - Key: Project
+          Value: !Ref ResourceTags
+        - Key: Environment
+          Value: !Ref Environment
+
+Outputs:
+  LambdaLayerArn:
+    Value: !GetAtt LayerVersionStack.Outputs.PythonLambdaLayer
