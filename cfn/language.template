@@ -1,0 +1,90 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: Detect text language template.
+
+Parameters:
+  LambdaLayerArn:
+    Type: String
+
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  DetectTextLanguage:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - XrayServiceAccessPolicy
+      - CloudWatchLogsServiceAccessPolicy
+      - DetectTextLanguagePolicy
+    Properties:
+      CodeUri: ../src/functions/detect-text-language
+      Description: Detect text language function.
+      Role: !GetAtt DetectTextLanguageServiceRole.Arn
+      Handler: detect_language.lambda_handler
+      Runtime: python3.8
+      Layers:
+        - !Ref LambdaLayerArn
+      Timeout: 900
+      Tracing: Active
+
+  DetectTextLanguageServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+
+  XrayServiceAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: !Sub Allows the Add Users Lambda Function to access X-Ray. Stack ${AWS::StackName}
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Action:
+            - xray:PutTraceSegments
+            - xray:PutTelemetryRecords
+            - xray:GetSamplingRules
+            - xray:GetSamplingTargets
+            - xray:GetSamplingStatisticSummaries
+          Resource: '*'
+      Roles:
+        - !Ref DetectTextLanguageServiceRole
+
+  CloudWatchLogsServiceAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: !Sub Allows the Add Users Lambda Function to access CloudWatch logs. Stack ${AWS::StackName}
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource:
+            - !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:*
+            - !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*
+      Roles:
+        - !Ref DetectTextLanguageServiceRole
+
+  DetectTextLanguagePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: comprehend:DetectDominantLanguage
+            Effect: Allow
+            Resource: '*'
+        Version: "2012-10-17"
+      Roles:
+        - !Ref DetectTextLanguageServiceRole
+
+Outputs:
+  DetectTextLanguage:
+    Value: !Ref DetectTextLanguage

@@ -22,7 +22,7 @@ Parameters:
   ResourceTags:
     Description: Tag resources, which can help you identify and categorize them. For example project or application name e.g. MyAwesomeApp.
     Type: String
-    Default: MyApp
+    Default: LocationDetectApp
 
   Environment:
     Description: The type of environment to tag your infrastructure with. You can specify DEV (development), TEST (test), or PROD (production).
@@ -38,6 +38,18 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: layer.template
+      Tags:
+        - Key: Project
+          Value: !Ref ResourceTags
+        - Key: Environment
+          Value: !Ref Environment
+
+  DetectTextLanguageStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: language.template
+      Parameters:
+        LambdaLayerArn: !GetAtt LayerVersionStack.Outputs.PythonLambdaLayer
       Tags:
         - Key: Project
           Value: !Ref ResourceTags
