@@ -1,32 +1,36 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: Detect text language template.
+Description: Generate map with arkers template.
 
 Parameters:
   Boto3Layer:
     Type: String
 
+  Jinja2Layer:
+    Type: String
+
 Transform: AWS::Serverless-2016-10-31
 
 Resources:
-  DetectTextLanguage:
+  GenerateMapWithMarkers:
     Type: AWS::Serverless::Function
     DependsOn:
       - XrayServiceAccessPolicy
       - CloudWatchLogsServiceAccessPolicy
-      - DetectTextLanguagePolicy
+      - GenerateMapWithMarkersPolicy
     Properties:
-      CodeUri: ../src/functions/detect-language
+      CodeUri: ../src/functions/generate-map
       Description: Detect text language function.
-      Role: !GetAtt DetectTextLanguageServiceRole.Arn
-      Handler: detect_language.lambda_handler
+      Role: !GetAtt GenerateMapWithMarkersServiceRole.Arn
+      Handler: generate_map.lambda_handler
       Runtime: python3.8
       Layers:
         - !Ref Boto3Layer
+        - !Ref Jinja2Layer
       Timeout: 900
       Tracing: Active
 
-  DetectTextLanguageServiceRole:
+  GenerateMapWithMarkersServiceRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -53,7 +57,7 @@ Resources:
             - xray:GetSamplingStatisticSummaries
           Resource: '*'
       Roles:
-        - !Ref DetectTextLanguageServiceRole
+        - !Ref GenerateMapWithMarkersServiceRole
 
   CloudWatchLogsServiceAccessPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -71,20 +75,22 @@ Resources:
             - !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:*
             - !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*
       Roles:
-        - !Ref DetectTextLanguageServiceRole
+        - !Ref GenerateMapWithMarkersServiceRole
 
-  DetectTextLanguagePolicy:
+  GenerateMapWithMarkersPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Action: comprehend:DetectDominantLanguage
+          - Action:
+              - s3:PutObject
+              - s3:GetObject
             Effect: Allow
-            Resource: '*'
+            Resource: '*' #TODO: scope down to bucket level
       Roles:
-        - !Ref DetectTextLanguageServiceRole
+        - !Ref GenerateMapWithMarkersServiceRole
 
 Outputs:
-  DetectTextLanguage:
-    Value: !Ref DetectTextLanguage
+  GenerateMapWithMarkers:
+    Value: !Ref GenerateMapWithMarkers

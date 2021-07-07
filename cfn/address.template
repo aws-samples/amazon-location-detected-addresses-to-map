@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: Detect text language template.
+Description: Detect address in text template.
 
 Parameters:
   Boto3Layer:
@@ -9,24 +9,24 @@ Parameters:
 Transform: AWS::Serverless-2016-10-31
 
 Resources:
-  DetectTextLanguage:
+  DetectAddressesInText:
     Type: AWS::Serverless::Function
     DependsOn:
       - XrayServiceAccessPolicy
       - CloudWatchLogsServiceAccessPolicy
-      - DetectTextLanguagePolicy
+      - DetectAddressesInTextPolicy
     Properties:
-      CodeUri: ../src/functions/detect-language
-      Description: Detect text language function.
-      Role: !GetAtt DetectTextLanguageServiceRole.Arn
-      Handler: detect_language.lambda_handler
+      CodeUri: ../src/functions/detect-address
+      Description: Detect address in text function.
+      Role: !GetAtt DetectAddressesInTextServiceRole.Arn
+      Handler: detect_address.lambda_handler
       Runtime: python3.8
       Layers:
         - !Ref Boto3Layer
       Timeout: 900
       Tracing: Active
 
-  DetectTextLanguageServiceRole:
+  DetectAddressesInTextServiceRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -53,7 +53,7 @@ Resources:
             - xray:GetSamplingStatisticSummaries
           Resource: '*'
       Roles:
-        - !Ref DetectTextLanguageServiceRole
+        - !Ref DetectAddressesInTextServiceRole
 
   CloudWatchLogsServiceAccessPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -71,20 +71,20 @@ Resources:
             - !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:*
             - !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*
       Roles:
-        - !Ref DetectTextLanguageServiceRole
+        - !Ref DetectAddressesInTextServiceRole
 
-  DetectTextLanguagePolicy:
+  DetectAddressesInTextPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Action: comprehend:DetectDominantLanguage
+          - Action: comprehend:DetectPiiEntities
             Effect: Allow
             Resource: '*'
       Roles:
-        - !Ref DetectTextLanguageServiceRole
+        - !Ref DetectAddressesInTextServiceRole
 
 Outputs:
-  DetectTextLanguage:
-    Value: !Ref DetectTextLanguage
+  DetectAddressesInText:
+    Value: !Ref DetectAddressesInText

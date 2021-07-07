@@ -49,7 +49,44 @@ Resources:
     Properties:
       TemplateURL: language.template
       Parameters:
-        LambdaLayerArn: !GetAtt LayerVersionStack.Outputs.PythonLambdaLayer
+        Boto3Layer: !GetAtt LayerVersionStack.Outputs.Boto3Layer
+      Tags:
+        - Key: Project
+          Value: !Ref ResourceTags
+        - Key: Environment
+          Value: !Ref Environment
+
+  DetectAddressesInTextStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: address.template
+      Parameters:
+        Boto3Layer: !GetAtt LayerVersionStack.Outputs.Boto3Layer
+      Tags:
+        - Key: Project
+          Value: !Ref ResourceTags
+        - Key: Environment
+          Value: !Ref Environment
+
+  GetCoordinatesForEachAddressStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: coordinates.template
+      Parameters:
+        Boto3Layer: !GetAtt LayerVersionStack.Outputs.Boto3Layer
+      Tags:
+        - Key: Project
+          Value: !Ref ResourceTags
+        - Key: Environment
+          Value: !Ref Environment
+
+  GenerateMapWithMarkersStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: map.template
+      Parameters:
+        Boto3Layer: !GetAtt LayerVersionStack.Outputs.Boto3Layer
+        Jinja2Layer: !GetAtt LayerVersionStack.Outputs.Jinja2Layer
       Tags:
         - Key: Project
           Value: !Ref ResourceTags
@@ -57,5 +94,20 @@ Resources:
           Value: !Ref Environment
 
 Outputs:
-  LambdaLayerArn:
-    Value: !GetAtt LayerVersionStack.Outputs.PythonLambdaLayer
+  Boto3Layer:
+    Value: !GetAtt LayerVersionStack.Outputs.Boto3Layer
+
+  Jinja2Layer:
+    Value: !GetAtt LayerVersionStack.Outputs.Jinja2Layer
+
+  DetectTextLanguageName:
+    Value: !GetAtt DetectTextLanguageStack.Outputs.DetectTextLanguage
+
+  DetectAddressesInTextName:
+    Value: !GetAtt DetectAddressesInTextStack.Outputs.DetectAddressesInText
+
+  GetCoordinatesForEachAddressName:
+    Value: !GetAtt GetCoordinatesForEachAddressStack.Outputs.GetCoordinatesForEachAddress
+
+  GenerateMapWithMarkersName:
+    Value: !GetAtt GenerateMapWithMarkersStack.Outputs.GenerateMapWithMarkers
