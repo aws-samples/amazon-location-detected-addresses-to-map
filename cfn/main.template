@@ -93,6 +93,16 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
+  CognitoStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: cognito.template
+      Tags:
+        - Key: Project
+          Value: !Ref ResourceTags
+        - Key: Environment
+          Value: !Ref Environment
+
 Outputs:
   Boto3Layer:
     Value: !GetAtt LayerVersionStack.Outputs.Boto3Layer
@@ -111,3 +121,6 @@ Outputs:
 
   GenerateMapWithMarkersName:
     Value: !GetAtt GenerateMapWithMarkersStack.Outputs.GenerateMapWithMarkers
+
+  CognitoIdentityPool:
+    Value: !GetAtt CognitoStack.Outputs.CognitoIdentityPool
