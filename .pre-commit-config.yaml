@@ -35,7 +35,7 @@ repos:
     files: .
 
 # CloudFormation
-- repo: https://github.com/aws-cloudformation/cfn-python-lint
+- repo: https://github.com/aws-cloudformation/cfn-lint
   rev: v0.52.0
   hooks:
   - id: cfn-python-lint

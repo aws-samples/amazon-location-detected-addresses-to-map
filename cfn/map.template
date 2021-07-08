@@ -1,0 +1,96 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: Generate map with arkers template.
+
+Parameters:
+  Boto3Layer:
+    Type: String
+
+  Jinja2Layer:
+    Type: String
+
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  GenerateMapWithMarkers:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - XrayServiceAccessPolicy
+      - CloudWatchLogsServiceAccessPolicy
+      - GenerateMapWithMarkersPolicy
+    Properties:
+      CodeUri: ../src/functions/generate-map
+      Description: Detect text language function.
+      Role: !GetAtt GenerateMapWithMarkersServiceRole.Arn
+      Handler: generate_map.lambda_handler
+      Runtime: python3.8
+      Layers:
+        - !Ref Boto3Layer
+        - !Ref Jinja2Layer
+      Timeout: 900
+      Tracing: Active
+
+  GenerateMapWithMarkersServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+
+  XrayServiceAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: !Sub Allows Lambda Function to access X-Ray. Stack ${AWS::StackName}
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Action:
+            - xray:PutTraceSegments
+            - xray:PutTelemetryRecords
+            - xray:GetSamplingRules
+            - xray:GetSamplingTargets
+            - xray:GetSamplingStatisticSummaries
+          Resource: '*'
+      Roles:
+        - !Ref GenerateMapWithMarkersServiceRole
+
+  CloudWatchLogsServiceAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: !Sub Allows Lambda Function to access CloudWatch logs. Stack ${AWS::StackName}
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource:
+            - !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:*
+            - !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*
+      Roles:
+        - !Ref GenerateMapWithMarkersServiceRole
+
+  GenerateMapWithMarkersPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - s3:PutObject
+              - s3:GetObject
+            Effect: Allow
+            Resource: '*' #TODO: scope down to bucket level
+      Roles:
+        - !Ref GenerateMapWithMarkersServiceRole
+
+Outputs:
+  GenerateMapWithMarkers:
+    Value: !GetAtt GenerateMapWithMarkers.Arn

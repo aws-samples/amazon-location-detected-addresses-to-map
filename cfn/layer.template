@@ -5,16 +5,29 @@ Description: Creates a Lambda LayerVersion that contains library or runtime code
 Transform: AWS::Serverless-2016-10-31
 
 Resources:
-  PythonLibrary:
+  Boto3Layer:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      LayerName: !Sub ${AWS::StackName}
-      Description: Dependencies for the python sample functions.
-      ContentUri: ../src/layers/python/.
+      LayerName: !Sub boto3-${AWS::StackName}
+      Description: A layer that enables boto3.
+      ContentUri: ../src/layers/boto3/.
+      CompatibleRuntimes:
+        - python3.8
+      RetentionPolicy: Delete
+
+  Jinja2Layer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub jinja2-${AWS::StackName}
+      Description: A layer that enables Jinja2
+      ContentUri: ../src/layers/jinja2/.
       CompatibleRuntimes:
         - python3.8
       RetentionPolicy: Delete
 
 Outputs:
-  PythonLambdaLayer:
-    Value: !Ref PythonLibrary
+  Boto3Layer:
+    Value: !Ref Boto3Layer
+
+  Jinja2Layer:
+    Value: !Ref Jinja2Layer
