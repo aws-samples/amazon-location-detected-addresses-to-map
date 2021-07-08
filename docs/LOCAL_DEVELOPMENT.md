@@ -6,21 +6,40 @@ The following dependencies must be installed:
 - Python >=3.8 and pip
 - VirtualEnv
 - NodeJs
+- Go
 - Ruby >=2.6 and gem
 - [cfn-nag](https://github.com/stelligent/cfn_nag)
 
+Here is a code to install pre-requisites on macOS using [Homebrew](https://brew.sh/). For other operating systems,
+please refer to the OS documentation.
+```shell
+# install python3
+brew install python
+
+# install VirtualEnv
+pip3 install virtualenv
+
+# install NodeJS
+brew install node
+
+# install go
+brew install go
+
+# install cfn-nag
+brew install ruby brew-gem
+brew gem install cfn-nag
+```
+
 ### Build local development environment
 
-Once you have installed pre-requisites and
-[set up your SSH public key](https://w.amazon.com/bin/view/AWS/Teams/WWPS/TSD/GitLab#HSettingupSSHKeys) in a GitLab,
-run commands below:
+Once you have installed pre-requisites, run commands below:
 
 #### Step 1 - `make init` (Required)
 In the first step, you will create your repository and create a virtual environment.
 
 1. Clone the repository.
    ```shell
-   git@github.com:aws-samples/amazon-location-detected-addresses-to-map.git
+   git clone <git-repository-clone-address>
    ```
 1. Initialize the local environment
    ```shell
