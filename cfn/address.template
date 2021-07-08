@@ -87,4 +87,4 @@ Resources:
 
 Outputs:
   DetectAddressesInText:
-    Value: !Ref DetectAddressesInText
+    Value: !GetAtt DetectAddressesInText.Arn

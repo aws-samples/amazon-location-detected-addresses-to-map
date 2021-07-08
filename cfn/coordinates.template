@@ -90,4 +90,4 @@ Resources:
 
 Outputs:
   GetCoordinatesForEachAddress:
-    Value: !Ref GetCoordinatesForEachAddress
+    Value: !GetAtt GetCoordinatesForEachAddress.Arn

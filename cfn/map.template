@@ -93,4 +93,4 @@ Resources:
 
 Outputs:
   GenerateMapWithMarkers:
-    Value: !Ref GenerateMapWithMarkers
+    Value: !GetAtt GenerateMapWithMarkers.Arn

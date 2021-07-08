@@ -1,0 +1,176 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+  DetectAddressesInText:
+    Type: String
+
+  GetCoordinatesForEachAddress:
+    Type: String
+
+  DetectTextLanguage:
+    Type: String
+
+  GenerateMapWithMarkers:
+    Type: String
+
+Resources:
+  DetectAddressesInTextAndPlotInMapRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: !Join
+                - ""
+                - - states.
+                  - !Ref 'AWS::Region'
+                  - .amazonaws.com
+
+  DetectAddressesInTextAndPlotInMapRolePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: lambda:InvokeFunction
+            Effect: Allow
+            Resource: !Ref DetectAddressesInText
+          - Action: lambda:InvokeFunction
+            Effect: Allow
+            Resource: !Ref GetCoordinatesForEachAddress
+          - Action: lambda:InvokeFunction
+            Effect: Allow
+            Resource: !Ref DetectTextLanguage
+          - Action: lambda:InvokeFunction
+            Effect: Allow
+            Resource: !Ref GenerateMapWithMarkers
+      Roles:
+        - !Ref DetectAddressesInTextAndPlotInMapRole
+
+  DetectAddressesInTextAndPlotInMap:
+    Type: AWS::StepFunctions::StateMachine
+    DependsOn:
+      - DetectAddressesInTextAndPlotInMapRolePolicy
+    Properties:
+      RoleArn: !GetAtt DetectAddressesInTextAndPlotInMapRole.Arn
+      DefinitionString: !Sub |-
+        {
+          "StartAt": "Detect text language",
+          "States": {
+            "Detect text language": {
+              "Next": "Is it English?",
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6,
+                  "BackoffRate": 2
+                }
+              ],
+              "Type": "Task",
+              "OutputPath": "$.Payload",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${DetectTextLanguage}",
+                "Payload.$": "$"
+              }
+            },
+            "Is it English?": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.lang_code",
+                  "StringMatches": "en",
+                  "Next": "Detect addresses in text"
+                }
+              ],
+              "Default": "Language not supported"
+            },
+            "Language not supported": {
+              "Type": "Fail",
+              "Error": "DetectTextLanguage returned something that is not \"en\"",
+              "Cause": "Amazon Comprehend supports PII detection in only English text."
+            },
+            "Detect addresses in text": {
+              "Next": "Get coordinates for each address",
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6,
+                  "BackoffRate": 2
+                }
+              ],
+              "Type": "Task",
+              "OutputPath": "$.Payload",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${DetectAddressesInText}",
+                "Payload.$": "$"
+              }
+            },
+            "Get coordinates for each address": {
+              "Next": "Generate map with markers",
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6,
+                  "BackoffRate": 2
+                }
+              ],
+              "Type": "Task",
+              "OutputPath": "$.Payload",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${GetCoordinatesForEachAddress}",
+                "Payload.$": "$"
+              }
+            },
+            "Generate map with markers": {
+              "End": true,
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6,
+                  "BackoffRate": 2
+                }
+              ],
+              "Type": "Task",
+              "OutputPath": "$.Payload",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${GenerateMapWithMarkers}",
+                "Payload.$": "$"
+              }
+            }
+          },
+          "TimeoutSeconds": 30
+        }
+
+Outputs:
+  StateMachineARN:
+    Value: !Ref DetectAddressesInTextAndPlotInMap
+
+  StateMachineName:
+    Value: !GetAtt DetectAddressesInTextAndPlotInMap.Name

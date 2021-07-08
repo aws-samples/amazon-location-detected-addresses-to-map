@@ -103,24 +103,36 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
+  StepFunctionsStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: step-functions.template
+      Parameters:
+        DetectAddressesInText: !GetAtt DetectAddressesInTextStack.Outputs.DetectAddressesInText
+        GetCoordinatesForEachAddress: !GetAtt GetCoordinatesForEachAddressStack.Outputs.GetCoordinatesForEachAddress
+        DetectTextLanguage: !GetAtt DetectTextLanguageStack.Outputs.DetectTextLanguage
+        GenerateMapWithMarkers: !GetAtt GenerateMapWithMarkersStack.Outputs.GenerateMapWithMarkers
+      Tags:
+        - Key: Project
+          Value: !Ref ResourceTags
+        - Key: Environment
+          Value: !Ref Environment
+
 Outputs:
-  Boto3Layer:
-    Value: !GetAtt LayerVersionStack.Outputs.Boto3Layer
-
-  Jinja2Layer:
-    Value: !GetAtt LayerVersionStack.Outputs.Jinja2Layer
-
-  DetectTextLanguageName:
-    Value: !GetAtt DetectTextLanguageStack.Outputs.DetectTextLanguage
-
-  DetectAddressesInTextName:
-    Value: !GetAtt DetectAddressesInTextStack.Outputs.DetectAddressesInText
-
-  GetCoordinatesForEachAddressName:
-    Value: !GetAtt GetCoordinatesForEachAddressStack.Outputs.GetCoordinatesForEachAddress
-
-  GenerateMapWithMarkersName:
-    Value: !GetAtt GenerateMapWithMarkersStack.Outputs.GenerateMapWithMarkers
-
-  CognitoIdentityPool:
+  CognitoIdentityPoolId:
     Value: !GetAtt CognitoStack.Outputs.CognitoIdentityPool
+
+  StateMachineARN:
+    Value: !GetAtt StepFunctionsStack.Outputs.StateMachineARN
+
+  StateMachineName:
+    Value: !GetAtt StepFunctionsStack.Outputs.StateMachineName
+
+  ExampleCLI:
+    Value: !Join
+      - ""
+      - - 'aws stepfunctions start-execution  --state-machine-arn '
+        - !GetAtt StepFunctionsStack.Outputs.StateMachineARN
+        - ' --input "{\"text\": \"I live in England, my office is in EC1A 2FD, London.\", \"s3_bucket\": \"blog-location\", \"s3_folder\": \"my-folder/\", \"identity_pool_id\": \"'
+        - !GetAtt CognitoStack.Outputs.CognitoIdentityPool
+        - '\", \"map_name\": \"my-map-2021\" }"'

@@ -87,4 +87,4 @@ Resources:
 
 Outputs:
   DetectTextLanguage:
-    Value: !Ref DetectTextLanguage
+    Value: !GetAtt DetectTextLanguage.Arn
