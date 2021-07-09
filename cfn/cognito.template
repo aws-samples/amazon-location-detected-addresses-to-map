@@ -1,5 +1,9 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
+Parameters:
+  MapName:
+    Type: String
+
 Resources:
   CognitoIdentityPool:
     Type: AWS::Cognito::IdentityPool
@@ -10,6 +14,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
+        Version: "2012-10-17"
         Statement:
           - Action: sts:AssumeRoleWithWebIdentity
             Condition:
@@ -20,18 +25,21 @@ Resources:
             Effect: Allow
             Principal:
               Federated: cognito-identity.amazonaws.com
-        Version: "2012-10-17"
 
   CognitoDefaultUnauthenticatedPolicy:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyDocument:
-        Statement:
-          - Action: geo:GetMap* #TODO: this needs to specific GetMap action
-            Effect: Allow
-            Resource: '*' #TODO: This can be scoped down to map resource
-        Version: "2012-10-17"
       PolicyName: CognitoDefaultUnauthenticatedPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - geo:GetMapGlyphs
+              - geo:GetMapSprites
+              - geo:GetMapStyleDescriptor
+              - geo:GetMapTile
+            Resource: !Sub arn:${AWS::Partition}:geo:${AWS::Region}:${AWS::AccountId}:map/${MapName}
       Roles:
         - !Ref CognitoDefaultUnauthenticatedRole
 
@@ -54,13 +62,17 @@ Resources:
   CognitoDefaultAuthenticatedPolicy:
     Type: AWS::IAM::Policy
     Properties:
+      PolicyName: CognitoDefaultUnauthenticatedPolicy
       PolicyDocument:
-        Statement:
-          - Action: geo:GetMap* #TODO: this needs to specific GetMap action
-            Effect: Allow
-            Resource: '*' #TODO: This can be scoped down to map resource
         Version: "2012-10-17"
-      PolicyName: CognitoDefaultAuthenticatedPolicy
+        Statement:
+          - Effect: Allow
+            Action:
+              - geo:GetMapGlyphs
+              - geo:GetMapSprites
+              - geo:GetMapStyleDescriptor
+              - geo:GetMapTile
+            Resource: !Sub arn:${AWS::Partition}:geo:${AWS::Region}:${AWS::AccountId}:map/${MapName}
       Roles:
         - !Ref CognitoDefaultAuthenticatedRole
 

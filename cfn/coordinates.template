@@ -84,7 +84,7 @@ Resources:
               - geo:SearchPlaceIndexForText
               - geo:DeletePlaceIndex
             Effect: Allow
-            Resource: !Sub arn:${AWS::Partition}:geo:${AWS::Region}:${AWS::AccountId}:place-index/* #TODO: scope down to index if possible
+            Resource: !Sub arn:${AWS::Partition}:geo:${AWS::Region}:${AWS::AccountId}:place-index/*
       Roles:
         - !Ref GetCoordinatesForEachAddressServiceRole
 

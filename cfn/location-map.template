@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: Amazon location map.
+
+Parameters:
+  MapName:
+    Type: String
+
+  MapPricingPlan:
+    Type: String
+
+  MapStyle:
+    Type: String
+
+Resources:
+  LocationMap:
+    Type: AWS::Location::Map
+    Properties:
+      Configuration:
+        Style: !Ref MapStyle
+      Description: Amazon location map.
+      MapName: !Ref MapName
+      PricingPlan: !Ref MapPricingPlan
+
+Outputs:
+  MapName:
+    Value: !Ref LocationMap
