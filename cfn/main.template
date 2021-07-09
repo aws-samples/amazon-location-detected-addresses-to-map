@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: Project description #TODO: Add description
+Description: AWS CloudFormation code deploying a Step Functions that leverage Amazon Comprehend and Amazon Location Service. ()
 
 Metadata:
   Version: 0.0.1
@@ -8,17 +8,72 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
+          default: Map configuration
+        Parameters:
+          - CreateMap
+          - MapName
+          - MapPricingPlan
+          - MapStyle
+      - Label:
           default: Other configuration
         Parameters:
           - ResourceTags
           - Environment
     ParameterLabels:
+      MapName:
+        default: Map name
+      MapPricingPlan:
+        default: Map pricing plan
+      MapStyle:
+        default: Map Style
       ResourceTags:
         default: Resource Tags
       Environment:
         deafult: Infrastructure Environment
 
 Parameters:
+  CreateMap:
+    Description: If True, this creates an Amazon Location Map.
+    Type: String
+    AllowedValues:
+      - true
+      - false
+    Default: true
+
+  MapName:
+    Description: Must contain only alphanumeric characters (A–Z, a–z, 0–9), hyphens (-), periods (.), and underscores (_). Must be a unique map resource name. No spaces allowed. For example, ExampleMap.
+    Type: String
+    Default: ExampleMap01
+    AllowedPattern: ^[-._\w]+$
+    ConstraintDescription: Must contain only alphanumeric characters (A–Z, a–z, 0–9), hyphens (-), periods (.), and underscores (_).
+    MinLength: 1
+    MaxLength: 100
+
+  MapPricingPlan:
+    Description: Specifies the pricing plan for your map resource. Allowed values -  MobileAssetManagement | MobileAssetTracking | RequestBasedUsage.
+    Type: String
+    AllowedValues:
+      - MobileAssetManagement
+      - MobileAssetTracking
+      - RequestBasedUsage
+    Default: RequestBasedUsage
+
+  MapStyle:
+    Description: Specifie the map style selected from an available data providers.
+    Type: String
+    AllowedValues:
+      - VectorEsriStreets
+      - VectorEsriTopographic
+      - VectorEsriNavigation
+      - VectorEsriDarkGrayCanvas
+      - VectorEsriLightGrayCanvas
+      - VectorHereBerlin
+    Default: VectorEsriStreets
+    MinLength: 1
+    MaxLength: 100
+    AllowedPattern: ^[-._\w]+$
+    ConstraintDescription: Must contain only alphanumeric characters (A–Z, a–z, 0–9), hyphens (-), periods (.), and underscores (_).
+
   ResourceTags:
     Description: Tag resources, which can help you identify and categorize them. For example project or application name e.g. MyAwesomeApp.
     Type: String
@@ -32,6 +87,9 @@ Parameters:
       - TEST
       - PROD
     Default: DEV
+
+Conditions:
+  IsCreateMap: !Equals [!Ref CreateMap, true]
 
 Resources:
   LayerVersionStack:
@@ -97,6 +155,11 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: cognito.template
+      Parameters:
+        MapName: !If
+          - IsCreateMap
+          - !GetAtt LocationMapStack.Outputs.MapName
+          - !Ref MapName
       Tags:
         - Key: Project
           Value: !Ref ResourceTags
@@ -118,6 +181,21 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
+  LocationMapStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: location-map.template
+      Parameters:
+        MapName: !Ref MapName
+        MapPricingPlan: !Ref MapPricingPlan
+        MapStyle: !Ref MapStyle
+      Tags:
+        - Key: Project
+          Value: !Ref ResourceTags
+        - Key: Environment
+          Value: !Ref Environment
+    Condition: IsCreateMap
+
 Outputs:
   CognitoIdentityPoolId:
     Value: !GetAtt CognitoStack.Outputs.CognitoIdentityPool
@@ -128,11 +206,27 @@ Outputs:
   StateMachineName:
     Value: !GetAtt StepFunctionsStack.Outputs.StateMachineName
 
+  MapName:
+    Value: !If
+      - IsCreateMap
+      - !GetAtt LocationMapStack.Outputs.MapName
+      - !Ref MapName
+
+  MapBucketName:
+    Value: !GetAtt GenerateMapWithMarkersStack.Outputs.GenerateMapTargetBucket
+
   ExampleCLI:
     Value: !Join
       - ""
       - - 'aws stepfunctions start-execution  --state-machine-arn '
         - !GetAtt StepFunctionsStack.Outputs.StateMachineARN
-        - ' --input "{\"text\": \"I live in England, my office is in EC1A 2FD, London.\", \"s3_bucket\": \"blog-location\", \"s3_folder\": \"my-folder/\", \"identity_pool_id\": \"'
+        - ' --input "{\"text\": \"I live in England, my office is in EC1A 2FD, London.\", \"s3_bucket\": \"'
+        - !GetAtt GenerateMapWithMarkersStack.Outputs.GenerateMapTargetBucket
+        - '\", \"s3_folder\": \"map-folder/\", \"identity_pool_id\": \"'
         - !GetAtt CognitoStack.Outputs.CognitoIdentityPool
-        - '\", \"map_name\": \"my-map-2021\" }"'
+        - '\", \"map_name\": \"'
+        - !If
+          - IsCreateMap
+          - !GetAtt LocationMapStack.Outputs.MapName
+          - !Ref MapName
+        - \" }"

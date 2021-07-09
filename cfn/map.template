@@ -79,6 +79,8 @@ Resources:
 
   GenerateMapWithMarkersPolicy:
     Type: AWS::IAM::ManagedPolicy
+    DependsOn:
+      - GenerateMapTargetBucket
     Properties:
       PolicyDocument:
         Version: "2012-10-17"
@@ -87,10 +89,25 @@ Resources:
               - s3:PutObject
               - s3:GetObject
             Effect: Allow
-            Resource: '*' #TODO: scope down to bucket level
+            Resource: !Sub arn:${AWS::Partition}:s3:::${GenerateMapTargetBucket}/*
       Roles:
         - !Ref GenerateMapWithMarkersServiceRole
+
+  GenerateMapTargetBucket:
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
 
 Outputs:
   GenerateMapWithMarkers:
     Value: !GetAtt GenerateMapWithMarkers.Arn
+
+  GenerateMapTargetBucket:
+    Value: !Ref GenerateMapTargetBucket
