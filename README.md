@@ -1,4 +1,8 @@
-## My Project
+## Amazon Location Detect Addresses to Map
+
+[![Publish Version](https://github.com/aws-samples/amazon-location-detected-addresses-to-map/workflows/Publish%20Version/badge.svg)](https://github.com/aws-samples/amazon-location-detected-addresses-to-map/actions)
+[![Unit Tests](https://github.com/aws-samples/amazon-location-detected-addresses-to-map/workflows/Unit%20Tests/badge.svg)](https://github.com/aws-samples/amazon-location-detected-addresses-to-map/actions)
+
 
 TODO: Fill this README out!
 
