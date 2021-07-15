@@ -94,3 +94,10 @@ In the last step, you will deploy your infrastructure with CloudFormation. The `
    ```shell
    make deploy
    ```
+
+### Delete the stacks
+
+1. Delete CloudFormation stacks
+   ```shell
+   make delete
+   ```
