@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
-Description: AWS CloudFormation code deploying a Step Functions that leverage Amazon Comprehend and Amazon Location Service. ()
+Description: AWS CloudFormation code deploying a Step Functions that leverage Amazon Comprehend and Amazon Location Service (uksb-1s3c5bgm1).
 
 Metadata:
   Version: 0.0.1
@@ -59,7 +59,7 @@ Parameters:
     Default: RequestBasedUsage
 
   MapStyle:
-    Description: Specifie the map style selected from an available data providers.
+    Description: Specifies the map style selected from an available data providers.
     Type: String
     AllowedValues:
       - VectorEsriStreets
