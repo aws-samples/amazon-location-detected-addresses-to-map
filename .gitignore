@@ -4,6 +4,7 @@
 /src/layers/jinja2/python/
 /cfn/packaged.template
 /src/layers/nodejs/package-lock.json
+/packaged.zip
 
 ### SAM template
 # gitignore template for AWS Serverless Application Model project

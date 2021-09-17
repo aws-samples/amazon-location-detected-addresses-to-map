@@ -26,8 +26,8 @@ Resources:
       RetentionPolicy: Delete
 
 Outputs:
-  Boto3Layer:
+  Boto3LayerArn:
     Value: !Ref Boto3Layer
 
-  Jinja2Layer:
+  Jinja2LayerArn:
     Value: !Ref Jinja2Layer

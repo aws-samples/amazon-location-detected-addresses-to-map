@@ -1,5 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
+Description: Step functions template.
+
 Parameters:
   DetectAddressesInText:
     Type: String
@@ -76,7 +78,7 @@ Resources:
               ],
               "Type": "Task",
               "OutputPath": "$.Payload",
-              "Resource": "arn:aws:states:::lambda:invoke",
+              "Resource": "arn:${AWS::Partition}:states:::lambda:invoke",
               "Parameters": {
                 "FunctionName": "${DetectTextLanguage}",
                 "Payload.$": "$"
@@ -114,7 +116,7 @@ Resources:
               ],
               "Type": "Task",
               "OutputPath": "$.Payload",
-              "Resource": "arn:aws:states:::lambda:invoke",
+              "Resource": "arn:${AWS::Partition}:states:::lambda:invoke",
               "Parameters": {
                 "FunctionName": "${DetectAddressesInText}",
                 "Payload.$": "$"
@@ -136,7 +138,7 @@ Resources:
               ],
               "Type": "Task",
               "OutputPath": "$.Payload",
-              "Resource": "arn:aws:states:::lambda:invoke",
+              "Resource": "arn:${AWS::Partition}:states:::lambda:invoke",
               "Parameters": {
                 "FunctionName": "${GetCoordinatesForEachAddress}",
                 "Payload.$": "$"
@@ -158,7 +160,7 @@ Resources:
               ],
               "Type": "Task",
               "OutputPath": "$.Payload",
-              "Resource": "arn:aws:states:::lambda:invoke",
+              "Resource": "arn:${AWS::Partition}:states:::lambda:invoke",
               "Parameters": {
                 "FunctionName": "${GenerateMapWithMarkers}",
                 "Payload.$": "$"

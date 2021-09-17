@@ -1,0 +1,251 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: Detect address in text template.
+
+Parameters:
+  Boto3Layer:
+    Type: String
+
+  Jinja2Layer:
+    Type: String
+
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  DetectAddressesInText:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - XrayServiceAccessPolicy
+      - CloudWatchLogsServiceAccessPolicy
+      - DetectAddressesInTextPolicy
+    Properties:
+      CodeUri: ../src/functions/detect-address
+      Description: Detect address in text function.
+      Role: !GetAtt DetectAddressesInTextServiceRole.Arn
+      Handler: detect_address.lambda_handler
+      Runtime: python3.8
+      Layers:
+        - !Ref Boto3Layer
+      Timeout: 900
+      Tracing: Active
+
+  DetectAddressesInTextServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+
+  DetectAddressesInTextPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: comprehend:DetectPiiEntities
+            Effect: Allow
+            Resource: '*'
+      Roles:
+        - !Ref DetectAddressesInTextServiceRole
+
+  GetCoordinatesForEachAddress:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - XrayServiceAccessPolicy
+      - CloudWatchLogsServiceAccessPolicy
+      - GetCoordinatesForEachAddressPolicy
+    Properties:
+      CodeUri: ../src/functions/get-coordinates
+      Description: Detect text language function.
+      Role: !GetAtt GetCoordinatesForEachAddressServiceRole.Arn
+      Handler: get_coordinates.lambda_handler
+      Runtime: python3.8
+      Layers:
+        - !Ref Boto3Layer
+      Timeout: 900
+      Tracing: Active
+
+  GetCoordinatesForEachAddressServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+
+  GetCoordinatesForEachAddressPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - geo:CreatePlaceIndex
+              - geo:SearchPlaceIndexForText
+              - geo:DeletePlaceIndex
+            Effect: Allow
+            Resource: !Sub arn:${AWS::Partition}:geo:${AWS::Region}:${AWS::AccountId}:place-index/*
+      Roles:
+        - !Ref GetCoordinatesForEachAddressServiceRole
+
+  DetectTextLanguage:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - XrayServiceAccessPolicy
+      - CloudWatchLogsServiceAccessPolicy
+      - DetectTextLanguagePolicy
+    Properties:
+      CodeUri: ../src/functions/detect-language
+      Description: Detect text language function.
+      Role: !GetAtt DetectTextLanguageServiceRole.Arn
+      Handler: detect_language.lambda_handler
+      Runtime: python3.8
+      Layers:
+        - !Ref Boto3Layer
+      Timeout: 900
+      Tracing: Active
+
+  DetectTextLanguageServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+
+  DetectTextLanguagePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: comprehend:DetectDominantLanguage
+            Effect: Allow
+            Resource: '*'
+      Roles:
+        - !Ref DetectTextLanguageServiceRole
+
+  GenerateMapWithMarkers:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - XrayServiceAccessPolicy
+      - CloudWatchLogsServiceAccessPolicy
+      - GenerateMapWithMarkersPolicy
+    Properties:
+      CodeUri: ../src/functions/generate-map
+      Description: Detect text language function.
+      Role: !GetAtt GenerateMapWithMarkersServiceRole.Arn
+      Handler: generate_map.lambda_handler
+      Runtime: python3.8
+      Layers:
+        - !Ref Boto3Layer
+        - !Ref Jinja2Layer
+      Timeout: 900
+      Tracing: Active
+
+  GenerateMapWithMarkersServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+
+  GenerateMapWithMarkersPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    DependsOn:
+      - GenerateMapTargetBucket
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - s3:PutObject
+              - s3:GetObject
+            Effect: Allow
+            Resource: !Sub arn:${AWS::Partition}:s3:::${GenerateMapTargetBucket}/*
+      Roles:
+        - !Ref GenerateMapWithMarkersServiceRole
+
+  GenerateMapTargetBucket:
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  XrayServiceAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: !Sub Allows Lambda Function to access X-Ray. Stack ${AWS::StackName}
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Action:
+            - xray:PutTraceSegments
+            - xray:PutTelemetryRecords
+            - xray:GetSamplingRules
+            - xray:GetSamplingTargets
+            - xray:GetSamplingStatisticSummaries
+          Resource: '*'
+      Roles:
+        - !Ref DetectAddressesInTextServiceRole
+        - !Ref GetCoordinatesForEachAddressServiceRole
+        - !Ref DetectTextLanguageServiceRole
+        - !Ref GenerateMapWithMarkersServiceRole
+
+  CloudWatchLogsServiceAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: !Sub Allows Lambda Function to access CloudWatch logs. Stack ${AWS::StackName}
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource:
+            - !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:*
+            - !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*
+      Roles:
+        - !Ref DetectAddressesInTextServiceRole
+        - !Ref GetCoordinatesForEachAddressServiceRole
+        - !Ref DetectTextLanguageServiceRole
+        - !Ref GenerateMapWithMarkersServiceRole
+
+Outputs:
+  DetectAddressesInTextArn:
+    Value: !GetAtt DetectAddressesInText.Arn
+
+  GetCoordinatesForEachAddressArn:
+    Value: !GetAtt GetCoordinatesForEachAddress.Arn
+
+  DetectTextLanguageArn:
+    Value: !GetAtt DetectTextLanguage.Arn
+
+  GenerateMapWithMarkersArn:
+    Value: !GetAtt GenerateMapWithMarkers.Arn
+
+  GenerateMapTargetBucketName:
+    Value: !Ref GenerateMapTargetBucket
