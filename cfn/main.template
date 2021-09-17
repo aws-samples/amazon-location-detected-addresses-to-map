@@ -3,7 +3,7 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: AWS CloudFormation code deploying a Step Functions that leverage Amazon Comprehend and Amazon Location Service (uksb-1s3c5bgm1).
 
 Metadata:
-  Version: 0.0.1
+  Version: 0.0.2
 
   AWS::CloudFormation::Interface:
     ParameterGroups:
