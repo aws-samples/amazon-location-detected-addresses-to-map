@@ -130,7 +130,7 @@ def lambda_handler(event, context):
 
     client = boto3.client("s3")
     response = client.put_object(
-        Bucket=s3_bucket, Body=html_map, Key=s3_folder + filename_map
+        Bucket=s3_bucket, Body=html_map, Key=s3_folder + filename_map, ContentType='text/html'
     )
 
     print(response)
