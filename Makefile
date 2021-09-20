@@ -68,7 +68,7 @@ bucket:
 build:
 	@for layer in $(LAYER_PATH)/*; do \
   		printf "\n--> Installing %s requirements...\n" $${layer}; \
-		$(PYTHON) -m pip install -r $${layer}/requirements.txt --target $${layer}/python --upgrade; \
+		pip install -r $${layer}/requirements.txt --target $${layer}/python --upgrade; \
 	done
 
 package: build
