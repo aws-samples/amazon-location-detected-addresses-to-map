@@ -3,13 +3,23 @@
 [![Publish Version](https://github.com/aws-samples/amazon-location-detected-addresses-to-map/workflows/Publish%20Version/badge.svg)](https://github.com/aws-samples/amazon-location-detected-addresses-to-map/actions)
 [![Unit Tests](https://github.com/aws-samples/amazon-location-detected-addresses-to-map/workflows/Unit%20Tests/badge.svg)](https://github.com/aws-samples/amazon-location-detected-addresses-to-map/actions)
 
+AWS CloudFormation template deploying a Step Functions that leverages Amazon Comprehend and Amazon Location Service. 
 
-TODO: Fill this README out!
+The Step Functions embeds the generated map in a HTML file which contains markers on the addresses that have been detected into the input text.
 
-Be sure to:
+### Architecture
 
-* Change the title in this README
-* Edit your repository description on GitHub
+Target architecture:
+
+<p align="center">
+  <img src="docs/architecture_diagram.png" alt="AWS Architecture Diagram" />
+</p>
+
+
+Step function deployed:
+<p align="center">
+  <img src="docs/stepfunctions_graph.png" alt="Step Functions graph" />
+</p>
 
 ### Usage
 
@@ -47,7 +57,7 @@ cost for using this sample. For full details, see the pricing pages for each AWS
 |---------------|-------|-----------|
 |CreateMap|true|If True, this creates an Amazon Location Map.|
 |MapName|ExampleMap01|Must be a unique map resource name. No spaces allowed. For example, ExampleMap.|
-|MapPricingPla|RequestBasedUsage|Specifies the pricing plan for your map resource.|
+|MapPricingPlan|RequestBasedUsage|Specifies the pricing plan for your map resource.|
 |MapStyle|VectorEsriStreets|Specifies the map style selected from an available data providers.|
 |ResourceTags|LocationDetectApp|Tag resources, which can help you identify and categorize them.|
 |Environment|DEV|The type of environment to tag your infrastructure with.|
